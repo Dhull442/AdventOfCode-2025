@@ -26,25 +26,43 @@ vector<pss> tokenize(string line){
     }
     return ranges;
 }
+
 long long int countInvalid(pss& range){
-    if(range.first.size() == range.second.size() && range.first.size()%2 == 1){
-        return 0;
-    }
+    // lli f = stoll(range.first);
+    // lli xlen = (range.first.size()+1)/2;
+    // if(range.first.size()%2==1){
+    //     f = (lli)pow(10, range.first.size());
+    // }
+    // lli s = stoll(range.second);
+    // if(range.second.size()%2==1){
+    //     s = (lli)pow(10, range.second.size()-1)-1;
+    // }
+    // lli sum = 0;
+    // lli x = (lli)pow(10, xlen);
+    // cout << x << endl;
     lli f = stoll(range.first);
-    lli xlen = (range.first.size()+1)/2;
-    if(range.first.size()%2==1){
-        f = (lli)pow(10, range.first.size());
-    }
     lli s = stoll(range.second);
-    if(range.second.size()%2==1){
-        s = (lli)pow(10, range.second.size()-1)-1;
-    }
     lli sum = 0;
-    lli x = (lli)pow(10, xlen);
-    cout << x << endl;
     while(f <= s){
-        if(f/x == f%x){
-            sum += f;
+        string x = to_string(f);
+        int l = x.size();
+        for(int nsplits=2;nsplits<=l;nsplits++){
+            if(l%nsplits==0){
+                bool invalid = true;
+                int splitsize = l/nsplits;
+                for(int isplit = 1;isplit<nsplits && invalid;isplit++){
+                    for(int i=0;i<splitsize && invalid;i++){
+                        if(x[i+(isplit*splitsize)] != x[i+(isplit-1)*splitsize]){
+                            invalid = false;
+                            break;
+                        }
+                    }
+                }
+                if(invalid){
+                    sum+=f;
+                    break;
+                }
+            }
         }
         f++;
     }
