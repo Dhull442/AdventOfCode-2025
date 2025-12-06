@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <climits>
 #include<iostream>
 #include<fstream>
 #include<sstream>
@@ -10,42 +11,44 @@ int main(){
     ifstream file("input.txt");
     string line;
     // vector< vector<string> > nums;
-    vector< vi > nums;
-    // vector<char> ops;
+    // vector< vi > nums;
+    vector< string > lines;
+    vector<char> ops;
     bool opsin = false;
     lli count = 0;
+    int i=0;
     while(getline(file,line)){
-        int i=0;
-        istringstream iss(line);
-        string word;
         char begin = line[0];
         if(begin == '*' || begin == '+'){
-            opsin = true;
-        }
-        while(iss >> word){
-            if(opsin){
-                lli val=0;
-                if(word[0]=='*'){
-                    val = 1;
-                    for(lli num: nums[i]){
-                        val*=num;
+            istringstream iss(line);
+            char op;
+            while(iss>>op){
+                lli val = op=='*'?1:0;
+                while(true){
+                    string word = "";
+                    for(int li=0;li<lines.size();li++){
+                        if(i<lines[li].size() &&lines[li][i]!=' '){
+                            word+=lines[li][i];
+                        }
                     }
-                } else {
-                    val = 0;
-                    for(lli num: nums[i]){
-                        val+=num;
+                    i++;
+                    if(word.size()==0){
+                        break;
+                    } else {
+                        if(op=='*')
+                            val *= stoll(word);
+                        else
+                            val += stoll(word);
                     }
                 }
-                count+=val;
-            } else {
-                if(i<nums.size()){
-                    nums[i].push_back(stoll(word));
-                } else {
-                    nums.push_back({stoll(word)});
-                }
+                count += val;
             }
-            i++;
+        } else {
+            lines.push_back(line);
         }
     }
+
+
+
     cout << "ANSWER - " << count << endl;
 }
