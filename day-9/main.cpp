@@ -20,7 +20,7 @@ int main(){
     // sort(points.begin(),points.end());
     for(int i=0;i<points.size();i++){
         pi& pointi = points[i];
-        for(int j=i+2;j<i+4 && j < points.size();j++){
+        for(int j=i+1;j < points.size();j++){
             lli xd = 1+abs(pointi.f-points[j].f);
             lli yd = 1+abs(pointi.s-points[j].s);
             lli area = xd*yd;
