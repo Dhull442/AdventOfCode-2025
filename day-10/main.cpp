@@ -8,50 +8,40 @@ using namespace std;
 #define vi vector<lli>
 #define pi pair<lli,lli>
 ifstream file("input.txt");
+string operator^(const string& a, const string& b){
+    string out = "";
+    for(int i=0;i<a.size()&&i<b.size();i++){
+        if(a[i]==b[i]){
+            out += '0';
+        } else {
+            out += '1';
+        }
+    }
+    return out;
+}
 class Query{
 private:
-    int output;
-    int outputsize;
-    vector<int> buttons;
-    // vector<int> dp;
-    unordered_map<int,int> dp;
+    string output;
+    vector<string> buttons;
+    unordered_map<string,int> dp;
     string line;
     void setoutput(){
-        output = 0;
         int enPos = line.find(']');
         int stPos = 1;
         for(int i=stPos;i<enPos;i++){
-            output = output << 1;
             if(line[i]=='#'){
-                output += 1;
+                output = output + "1";
+            } else {
+                output = output + "0";
             }
         }
-        outputsize = enPos - stPos;
     }
-    int parseButton(int& st, int& en){
-        int button = 0;
-        vector<int> idx;
+    string parseButton(int& st, int& en){
+        string button(output.size(),'0');
         for(int i=st+1;i<en;i++){
             if(line[i]>='0' && line[i]<='9'){
-                idx.push_back((int)(line[i]-'0'));
+                button[(int)(line[i]-'0')]='1';
             }
-        }
-        sort(idx.begin(),idx.end());
-        int bsize = 0;
-        for(int i=0;i<idx.size();i++){
-            while(bsize<=idx[i]){
-                if(button == 0){
-                    bsize = idx[i]+1;
-                    break;
-                }
-                button = button << 1;
-                bsize++;
-            }
-            button += 1;
-        }
-        while(bsize<outputsize){
-            button = button << 1;
-            bsize++;
         }
         return button;
     }
@@ -70,21 +60,26 @@ private:
             }
         }
     }
+    void setJoltage(){
+
+    }
 public:
     Query(string input){
         line = input;
-        output = 0;
+        output = "";
         buttons = {};
         setoutput();
         setbuttons();
+        setJoltage();
     }
+
     int minPressesforOutput(){
-        dp = {{0,0}};
-        unordered_map<int,int> nextdp = {};
+        dp = {{string(output.size(),'0'),0}};
+        unordered_map<string,int> nextdp = {};
         for(int i=0;i<buttons.size();i++){
             nextdp.clear();
             for(auto& p: dp){
-                int nextNum = p.first^buttons[i];
+                string nextNum = p.first^buttons[i];
                 if(dp.find(nextNum)==dp.end() || dp[nextNum]>p.second+1){
                     nextdp.insert({nextNum,p.second+1});
                 }
@@ -98,9 +93,9 @@ public:
     void print(){
         const int num_bits = 10;
         cout << line << endl;
-        cout << "{" << bitset<num_bits>(output).to_string() << "}, [";
-        for(int& b: buttons){
-            cout << "{" << bitset<num_bits>(b).to_string() << "}, ";
+        cout << "{" << output << "}, [";
+        for(string& b: buttons){
+            cout << "{" << b << "}, ";
         }
         cout << "] " << endl;
     }
