@@ -3,6 +3,7 @@
 #include<iostream>
 #include<fstream>
 #include <limits>
+#include <unordered_map>
 using namespace std;
 #define lli long long int
 #define vi vector<lli>
@@ -23,9 +24,11 @@ class Query{
 private:
     string output;
     vector<string> buttons;
-    unordered_map<string,int> dp;
+    vector< vector<int> > buttonidx;
+    vector<int> joltage;
     string line;
-    void setoutput(){
+    void setOutput(){
+        output = "";
         int enPos = line.find(']');
         int stPos = 1;
         for(int i=stPos;i<enPos;i++){
@@ -36,45 +39,60 @@ private:
             }
         }
     }
-    string parseButton(int& st, int& en){
+    void parseButton(int& st, int& en){
         string button(output.size(),'0');
+        buttonidx.push_back({});
         for(int i=st+1;i<en;i++){
             if(line[i]>='0' && line[i]<='9'){
-                button[(int)(line[i]-'0')]='1';
+                int idx = (int)(line[i]-'0');
+                button[idx]='1';
+                buttonidx.back().push_back(idx);
             }
         }
-        return button;
+        buttons.push_back(button);
     }
-    void setbuttons(){
-        string bline = line;
+    void setButtons(){
+        buttons = {};
+        buttonidx = {};
         int stPos = 0;
         int enPos = stPos;
         while(true){
-            stPos = bline.find('(', stPos);
-            enPos = bline.find(')', stPos);
+            stPos = line.find('(', stPos);
+            enPos = line.find(')', stPos);
             if(stPos == string::npos || enPos == string::npos){
                 break;
             } else {
-                buttons.push_back(parseButton(stPos, enPos));
+                parseButton(stPos, enPos);
                 stPos=enPos+1;
             }
         }
+        sort(buttonidx.begin(),buttonidx.end());
     }
     void setJoltage(){
-
+        joltage={};
+        int stPos = line.find('{')+1;
+        int enPos = line.find('}');
+        while(true){
+            int nxtPos = line.find(',',stPos);
+            if(nxtPos == string::npos){
+                joltage.push_back(stoi(line.substr(stPos, enPos - stPos)));
+                break;
+            } else {
+                joltage.push_back(stoi(line.substr(stPos,nxtPos - stPos)));
+                stPos = nxtPos+1;
+            }
+        }
     }
 public:
     Query(string input){
         line = input;
-        output = "";
-        buttons = {};
-        setoutput();
-        setbuttons();
+        setOutput();
+        setButtons();
         setJoltage();
     }
 
     int minPressesforOutput(){
-        dp = {{string(output.size(),'0'),0}};
+        unordered_map<string,int> dp = {{string(output.size(),'0'),0}};
         unordered_map<string,int> nextdp = {};
         for(int i=0;i<buttons.size();i++){
             nextdp.clear();
@@ -89,6 +107,76 @@ public:
             }
         }
         return dp[output];
+    }
+    string vectorToStringHash(vector<int>& input){
+        string hash = "";
+        for(int i=0;i<input.size();i++){
+
+            hash += to_string(input[i]);
+            if(i<input.size()-1){
+                hash += "#";
+            }
+        }
+        return hash;
+    }
+    bool tryPressButtonForJoltage(int& i,vector<int>& currentJoltage){
+        bool pos = true;
+        vector<int>& button = buttonidx[i];
+        for(int bi=0;bi<button.size();bi++){
+            if(currentJoltage[button[bi]]==0){
+                pos=false;
+                break;
+            }
+        }
+        if(!pos){
+            return pos;
+        } else {
+            for(int bi=0;bi<button.size();bi++){
+                currentJoltage[button[bi]]--;
+            }
+        }
+        return pos;
+    }
+    bool tryUnpressButtonForJoltage(int& i, vector<int>& currentJoltage){
+        bool pos = true;
+        vector<int>& button = buttonidx[i];
+        for(int bi=0;bi<button.size();bi++){
+            currentJoltage[button[bi]]++;
+        }
+        return pos;
+    }
+    int minPressesforJoltage(int ii,vector<int>& target,unordered_map<string, int>& dp){
+        string hash = vectorToStringHash(target);
+        if(ii >= target.size()){
+            return -1;
+        }
+        if(dp.find(hash)!=dp.end()){
+            return dp[hash];
+        }
+        int bpress = minPressesforJoltage(ii+1,target,dp);
+        int timePressed = 0;
+        while(tryPressButtonForJoltage(ii,target)){
+            timePressed++;
+        }
+        while(timePressed){
+            int presses = minPressesforJoltage(ii+1,target, dp);
+            if(presses!=-1){
+                if(bpress == -1){
+                    bpress = 1+presses;
+                } else {
+                    bpress = min(bpress,presses+1);
+                }
+            }
+            tryUnpressButtonForJoltage(ii, target);
+            timePressed--;
+        }
+        dp[hash]=bpress;
+        return dp[hash];
+    }
+    int minPressesforJoltage(){
+        vector<int> empJoltage(joltage.size(),0);
+        unordered_map< string, int > dp={{vectorToStringHash(empJoltage),0}};
+        return minPressesforJoltage(0, joltage,dp);
     }
     void print(){
         const int num_bits = 10;
@@ -105,8 +193,9 @@ int main(){
     int count = 0;
     while(getline(file,line)){
         Query q(line);
-        int val = q.minPressesforOutput();
-        cout << line << ": " << val << endl;
+        cout << line << ": " << endl;
+        int val = q.minPressesforJoltage();
+        cout << "VAL: " << val << endl;
         count += val;
     }
     cout << "MIN COUNT - " << count << endl;
