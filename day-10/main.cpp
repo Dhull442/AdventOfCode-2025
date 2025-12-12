@@ -25,6 +25,7 @@ private:
     string output;
     vector<string> buttons;
     vector< vector<int> > buttonidx;
+    unordered_map< int, vector<int> > bitSetButtons;
     vector<int> joltage;
     string line;
     void setOutput(){
@@ -47,6 +48,10 @@ private:
                 int idx = (int)(line[i]-'0');
                 button[idx]='1';
                 buttonidx.back().push_back(idx);
+                if(bitSetButtons.find(idx)==bitSetButtons.end()){
+                    bitSetButtons[idx] = {};
+                }
+                bitSetButtons[idx].push_back(buttonidx.size());
             }
         }
         buttons.push_back(button);
@@ -54,6 +59,7 @@ private:
     void setButtons(){
         buttons = {};
         buttonidx = {};
+        bitSetButtons = {};
         int stPos = 0;
         int enPos = stPos;
         while(true){
@@ -147,7 +153,7 @@ public:
     }
     int minPressesforJoltage(int ii,vector<int>& target,unordered_map<string, int>& dp){
         string hash = vectorToStringHash(target);
-        if(ii >= target.size()){
+        if(ii >= buttonidx.size()){
             return -1;
         }
         if(dp.find(hash)!=dp.end()){
@@ -171,6 +177,7 @@ public:
             timePressed--;
         }
         dp[hash]=bpress;
+        // cout << hash << ": " << bpress << endl;
         return dp[hash];
     }
     int minPressesforJoltage(){
